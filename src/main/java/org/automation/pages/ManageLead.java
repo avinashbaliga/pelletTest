@@ -1,6 +1,7 @@
 package org.automation.pages;
 
 import org.automation.utilities.CommonUiUtilities;
+import org.openqa.selenium.By;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.support.FindBy;
@@ -33,16 +34,21 @@ public class ManageLead extends CommonUiUtilities {
     @FindBy(id = "moreAct")
     private WebElement actionsButton;
 
-    @FindBy(xpath = "//*[contains(@class, 'lvCheckboxCol')]//input[contains(@type,'checkbox') and not(contains(@id, 'selectAllEntity'))]")
-    private List<WebElement> selectLeadCheckbox;
-
     @FindBy(xpath = "//li[@data-value='mass_delete']")
     private WebElement deleteLeadMenuOption;
 
     @FindBy(xpath = "//div[contains(@class, 'alertPopup')]//button[contains(@class, 'lyteFailure')]")
     private WebElement confirmLeadDeleteButton;
 
-    private String deletedLeadName;
+    @FindBy(id = "newleft_Info")
+    private WebElement leadOverView;
+
+    @FindBy(id = "subvalue_LASTNAME")
+    private WebElement modifiedLeadName;
+
+    By selectLeadCheckbox = By.xpath("//*[contains(@class, 'lvCheckboxCol')]//input[contains(@type,'checkbox') and not(contains(@id, 'selectAllEntity'))]");
+
+    private int noOfLeadsBeforeDeletion;
 
     public ManageLead(WebDriver driver) {
         super(driver);
@@ -95,40 +101,34 @@ public class ManageLead extends CommonUiUtilities {
     }
 
     private void verifyLeadIsModified(String leadFirstName, String leadLastName) {
-        boolean leadFound = false;
-        waitForVisibility(leadName);
-
-        for (WebElement name : leadName) {
-            if (name.getText().toLowerCase().contains(STR."\{leadFirstName.toLowerCase()} \{leadLastName.toLowerCase()}")) {
-                leadFound = true;
-                break;
-            }
-        }
-
-        Assert.assertTrue(leadFound, STR."Failed to modify lead with first name: \{leadFirstName} and last name: \{leadLastName}");
+        Assert.assertTrue(isElementDisplayed(leadOverView), "Overview tab is not displayed. Failed to save a lead.");
+        waitForVisibility(modifiedLeadName);
+        Assert.assertEquals(getText(modifiedLeadName).trim(), STR."\{leadFirstName} \{leadLastName}", "Could not modify lead");
     }
 
     private void selectLead(int leadIndex) {
-        waitForVisibility(selectLeadCheckbox);
+        List<WebElement> selectedLeadCheckboxes = waitForPresence(selectLeadCheckbox);
 
-        if (leadIndex > selectLeadCheckbox.size())
-            Assert.fail(STR."Unable to open lead with index \{leadIndex}. Only \{selectLeadCheckbox.size()} leads are found.");
+        if (leadIndex > selectedLeadCheckboxes.size())
+            Assert.fail(STR."Unable to open lead with index \{leadIndex}. Only \{selectedLeadCheckboxes.size()} leads are found.");
 
-        clickOnElement(selectLeadCheckbox.get(leadIndex));
+//        clickOnElement(selectedLeadCheckboxes.get(leadIndex));
+        lazyClick(selectedLeadCheckboxes.get(leadIndex));
     }
 
     public void deleteLead(int leadIndex) {
         selectLead(leadIndex - 1);
-        saveLeadName(leadIndex - 1);
+        saveNumberOfLeadBeforeDeletion();
         clickOnActionsButton();
         verifyDeleteLeadOptionIsDisplayed();
         clickOnDeleteLeadOption();
         verifyDeleteLeadOptionIsDisplayed();
         confirmLeadDeletion();
+        verifyLeadDeletedSuccessfully();
     }
 
-    private void saveLeadName(int index) {
-        deletedLeadName = getText(leadName.get(index)).trim().toLowerCase();
+    private void saveNumberOfLeadBeforeDeletion() {
+        noOfLeadsBeforeDeletion = leadName.size();
     }
 
     private void clickOnActionsButton() {
@@ -155,14 +155,10 @@ public class ManageLead extends CommonUiUtilities {
         boolean leadDeletedSuccessfully = true;
 
         if (isElementDisplayed(leadName)) {
-            for (WebElement lead : leadName) {
-                if (getText(lead).trim().toLowerCase().contains(deletedLeadName)) {
-                    leadDeletedSuccessfully = false;
-                    break;
-                }
-            }
+            if (leadName.size() >= noOfLeadsBeforeDeletion)
+                leadDeletedSuccessfully = false;
         }
 
-        Assert.assertTrue(leadDeletedSuccessfully, STR."Failed to delete lead \{deletedLeadName}");
+        Assert.assertTrue(leadDeletedSuccessfully, "Failed to delete lead");
     }
 }

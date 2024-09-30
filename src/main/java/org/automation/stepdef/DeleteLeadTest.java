@@ -1,6 +1,5 @@
 package org.automation.stepdef;
 
-import io.cucumber.java.After;
 import io.cucumber.java.Before;
 import io.cucumber.java.en.And;
 import org.automation.baseClass.BaseUiTest;
@@ -19,7 +18,7 @@ public class DeleteLeadTest extends BaseUiTest {
         pageObjects = new ManageUiObjects(driver);
     }
 
-    @And("I should be able to delete a lead")
+    @And("I should be able to delete lead with index")
     public void IShouldBeAbleToDeleteLead(int leadIndex) {
         pageObjects.getManageLead().deleteLead(leadIndex);
     }

@@ -3,28 +3,35 @@ package org.automation.baseClass;
 import org.automation.utilities.TestProperties;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.chrome.ChromeDriver;
+import org.openqa.selenium.chrome.ChromeOptions;
 import org.openqa.selenium.edge.EdgeDriver;
 import org.openqa.selenium.firefox.FirefoxDriver;
 
 public class BaseUiTest {
 
-    private final static ThreadLocal<WebDriver> driverThreadLocal = new ThreadLocal<>();
+    private static WebDriver driver = null;
 
     public WebDriver getDriver() {
-        if (driverThreadLocal.get() == null)
+        if (driver == null)
             initiateDriver();
 
-        return driverThreadLocal.get();
+        return driver;
     }
 
     private void initiateDriver() {
         String browser = TestProperties.get("browser");
-        WebDriver driver = switch (browser) {
-            case "chrome" -> new ChromeDriver();
+        driver = switch (browser) {
+            case "chrome" -> {
+                ChromeOptions option = new ChromeOptions();
+                option.addArguments("--incognito");
+                yield new ChromeDriver(option);
+            }
             case "firefox" -> new FirefoxDriver();
             default -> new EdgeDriver();
         };
+    }
 
-        driverThreadLocal.set(driver);
+    public static void deleteBrowserInstance() {
+        driver = null;
     }
 }

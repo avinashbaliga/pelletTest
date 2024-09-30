@@ -1,6 +1,6 @@
 package org.automation.utilities.hooks;
 
-import io.cucumber.java.AfterAll;
+import io.cucumber.java.After;
 import io.cucumber.java.AfterStep;
 import io.cucumber.java.Scenario;
 import org.automation.baseClass.BaseUiTest;
@@ -10,7 +10,7 @@ import org.openqa.selenium.WebDriver;
 
 public class Hooks extends BaseUiTest {
 
-    private final WebDriver driver;
+    private static WebDriver driver;
     private TakesScreenshot takesScreenshot = null;
 
     public Hooks() {
@@ -30,8 +30,9 @@ public class Hooks extends BaseUiTest {
         return takesScreenshot.getScreenshotAs(OutputType.BYTES);
     }
 
-    @AfterAll
-    public static void afterAll(){
-
+    @After
+    public static void after() {
+        driver.quit();
+        deleteBrowserInstance();
     }
 }

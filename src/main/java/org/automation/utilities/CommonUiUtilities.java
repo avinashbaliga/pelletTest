@@ -1,5 +1,6 @@
 package org.automation.utilities;
 
+import org.openqa.selenium.By;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.support.ui.ExpectedConditions;
@@ -31,6 +32,10 @@ public class CommonUiUtilities {
         wait.until(ExpectedConditions.visibilityOfAllElements(elements));
     }
 
+    public List<WebElement> waitForPresence(By by) {
+        return wait.until(ExpectedConditions.presenceOfAllElementsLocatedBy(by));
+    }
+
     public void clickOnElement(WebElement element) {
         try {
             wait.until(ExpectedConditions.elementToBeClickable(element));
@@ -42,6 +47,7 @@ public class CommonUiUtilities {
 
     public void sendKeys(WebElement element, String text) {
         waitForVisibility(element);
+        element.clear();
         element.sendKeys(text);
     }
 
@@ -70,5 +76,9 @@ public class CommonUiUtilities {
             e.printStackTrace();
             throw new RuntimeException(STR."Failed to get text of \{element}");
         }
+    }
+
+    public void lazyClick(WebElement element) {
+        element.click();
     }
 }
