@@ -1,6 +1,7 @@
 package org.automation.utilities;
 
 import org.openqa.selenium.By;
+import org.openqa.selenium.JavascriptExecutor;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.support.ui.ExpectedConditions;
@@ -8,6 +9,7 @@ import org.openqa.selenium.support.ui.WebDriverWait;
 import org.testng.Assert;
 
 import java.time.Duration;
+import java.util.ArrayList;
 import java.util.List;
 
 public class CommonUiUtilities {
@@ -51,15 +53,6 @@ public class CommonUiUtilities {
         element.sendKeys(text);
     }
 
-    public boolean isElementDisplayed(List<WebElement> elements) {
-        try {
-            wait.until(ExpectedConditions.visibilityOfAllElements(elements));
-            return true;
-        } catch (Exception e) {
-            return false;
-        }
-    }
-
     public boolean isElementDisplayed(WebElement element) {
         try {
             wait.until(ExpectedConditions.visibilityOf(element));
@@ -78,7 +71,12 @@ public class CommonUiUtilities {
         }
     }
 
-    public void lazyClick(WebElement element) {
-        element.click();
+    public void clickUsingJs(WebElement element) {
+        getJavascriptExecutor().executeScript("arguments[0].click();", element);
+    }
+
+    public JavascriptExecutor getJavascriptExecutor() {
+        return (JavascriptExecutor) driver;
     }
 }
+

@@ -14,7 +14,7 @@ public class Hooks extends BaseUiTest {
     private TakesScreenshot takesScreenshot = null;
 
     public Hooks() {
-        this.driver = getDriver();
+        driver = getDriver();
     }
 
     @AfterStep

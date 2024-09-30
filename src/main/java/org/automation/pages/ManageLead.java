@@ -34,9 +34,6 @@ public class ManageLead extends CommonUiUtilities {
     @FindBy(id = "moreAct")
     private WebElement actionsButton;
 
-    @FindBy(xpath = "//li[@data-value='mass_delete']")
-    private WebElement deleteLeadMenuOption;
-
     @FindBy(xpath = "//div[contains(@class, 'alertPopup')]//button[contains(@class, 'lyteFailure')]")
     private WebElement confirmLeadDeleteButton;
 
@@ -46,9 +43,23 @@ public class ManageLead extends CommonUiUtilities {
     @FindBy(id = "subvalue_LASTNAME")
     private WebElement modifiedLeadName;
 
+    @FindBy(xpath = "//div[contains(@class, 'successMessageIcon')]")
+    private WebElement leadDeletedSuccessfullyMsg;
+
+    @FindBy(xpath = "//input[contains(@placeholder, 'Type here')]")
+    private WebElement filterTextBox;
+
+    @FindBy(xpath = "//button[@type='submit']")
+    private WebElement applyFilter;
+
+    @FindBy(xpath = "//div[contains(@class, 'cxTableCompNoResults')]")
+    private WebElement noLeadResultAfterFilter;
+
     By selectLeadCheckbox = By.xpath("//*[contains(@class, 'lvCheckboxCol')]//input[contains(@type,'checkbox') and not(contains(@id, 'selectAllEntity'))]");
 
-    private int noOfLeadsBeforeDeletion;
+    By deleteLeadMenuOption = By.xpath("//li[@data-value='mass_delete']");
+
+    String filterOptionXpath = "//lyte-checkbox[contains(@title, '{typeToReplace}')]//input";
 
     public ManageLead(WebDriver driver) {
         super(driver);
@@ -112,13 +123,11 @@ public class ManageLead extends CommonUiUtilities {
         if (leadIndex > selectedLeadCheckboxes.size())
             Assert.fail(STR."Unable to open lead with index \{leadIndex}. Only \{selectedLeadCheckboxes.size()} leads are found.");
 
-//        clickOnElement(selectedLeadCheckboxes.get(leadIndex));
-        lazyClick(selectedLeadCheckboxes.get(leadIndex));
+        clickUsingJs(selectedLeadCheckboxes.get(leadIndex));
     }
 
     public void deleteLead(int leadIndex) {
         selectLead(leadIndex - 1);
-        saveNumberOfLeadBeforeDeletion();
         clickOnActionsButton();
         verifyDeleteLeadOptionIsDisplayed();
         clickOnDeleteLeadOption();
@@ -127,24 +136,16 @@ public class ManageLead extends CommonUiUtilities {
         verifyLeadDeletedSuccessfully();
     }
 
-    private void saveNumberOfLeadBeforeDeletion() {
-        noOfLeadsBeforeDeletion = leadName.size();
-    }
-
     private void clickOnActionsButton() {
         clickOnElement(actionsButton);
     }
 
     private void verifyDeleteLeadOptionIsDisplayed() {
-        waitForVisibility(deleteLeadMenuOption);
+        waitForPresence(deleteLeadMenuOption);
     }
 
     private void clickOnDeleteLeadOption() {
-        clickOnElement(deleteLeadMenuOption);
-    }
-
-    private void verifyConfirmDeletePopupDisplayed() {
-        waitForVisibility(confirmLeadDeleteButton);
+        clickOnElement(waitForPresence(deleteLeadMenuOption).getFirst());
     }
 
     private void confirmLeadDeletion() {
@@ -152,13 +153,30 @@ public class ManageLead extends CommonUiUtilities {
     }
 
     private void verifyLeadDeletedSuccessfully() {
-        boolean leadDeletedSuccessfully = true;
+        Assert.assertTrue(isElementDisplayed(leadDeletedSuccessfullyMsg), "Failed to delete lead");
+    }
 
-        if (isElementDisplayed(leadName)) {
-            if (leadName.size() >= noOfLeadsBeforeDeletion)
-                leadDeletedSuccessfully = false;
-        }
+    public void filterLead(List<Map<String, String>> filterDetails) {
+        selectFilterType(filterDetails.getFirst().get("Type"));
+        enterFilterByText(filterDetails.getFirst().get("value"));
+        applyFilter();
+    }
 
-        Assert.assertTrue(leadDeletedSuccessfully, "Failed to delete lead");
+    private void selectFilterType(String filterType) {
+        WebElement filter = waitForPresence(By.xpath(filterOptionXpath.replace("{typeToReplace}", filterType))).getFirst();
+        clickUsingJs(filter);
+        Assert.assertTrue(isElementDisplayed(filterTextBox), "Filter option not working");
+    }
+
+    private void enterFilterByText(String filterBy) {
+        sendKeys(filterTextBox, filterBy);
+    }
+
+    private void applyFilter() {
+        clickOnElement(applyFilter);
+    }
+
+    public void verifyNoLeadDisplayedAfterFilter() {
+        Assert.assertTrue(isElementDisplayed(noLeadResultAfterFilter), "Filter not working as expected.");
     }
 }
